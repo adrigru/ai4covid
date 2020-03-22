@@ -20,21 +20,22 @@
                         <div class="col-md-12">
                             <div class="content-center brand">
 
-                            <h1 class="h1-seo;text-align:center">AI Powered solution to boost </h1>
+                            <h3 class="h1-seo;text-align:center">Description </h3>
                             </div>
-                            <p>I'm baby fashion axe jean shorts typewriter craft beer, swag ugh locavore PBR&B you probably haven't heard of them listicle.
-                                Next level banjo sustainable, tofu ugh blog woke post-ironic activated charcoal mumblecore gluten-free DIY fixie man braid.
-                                Four dollar toast tattooed bespoke ramps pickled authentic you probably haven't heard of them normcore.
-                                Beard raw denim kitsch listicle, humblebrag single-origin coffee hot chicken hoodie pop-up deep v pug.
+                            <p>
+                                This project is a result of the WirVsVirus Hackathon.
+                                Our objective was to assist doctors in diagnosing COVID-19 patients by training a convolutional network to discriminate between patients with and without the disease, based on an X-ray image.
+                                We use a DenseNet121 pretrained on the CheXpert dataset and finetune it to the covid-chestxray-dataset.
+                                Furthermore, we implemented a simple prediction service that displays the diagnosis based on an X-ray image uploaded by the user.
+                            </p>
+                            <br>
+                            <h3 class="h1-seo;text-align:center">How it works </h3>
 
-                                Quinoa blue bottle artisan, jianbing umami 90's seitan.
-                                Brunch health goth 8-bit yr deep v banjo truffaut swag small batch leggings raw denim chia actually neutra lyft.
-                                Semiotics viral pop-up flannel dreamcatcher woke 90's distillery cray jianbing butcher.
-                                Asymmetrical mustache yuccie, beard prism +1 williamsburg air plant tattooed tumeric poutine af slow-carb unicorn.
-                                Drinking vinegar cliche salvia etsy enamel pin.
-                                Aesthetic semiotics beard church-key gochujang, occupy sriracha gastropub swag chartreuse tilde pop-up hell of tote bag.
-                                Typewriter deep v selvage, hexagon everyday carry knausgaard asymmetrical umami flannel intelligentsia mustache pitchfork mumblecore keffiyeh cred. </p>
-
+                            <ul>
+                                <li>We first trained the COVID-19 classifier on Google Colab. See the notebook file covid_19.ipynb.</li>
+                                <li>We then implemented a simple backend server in Flask, that loads the classifier and performs inference on the X-ray image uploaded by the user.</li>
+                                <li>Finally, we developed a simple frontend server that allows user to upload an X-ray image and see the results of diagnosis: the predicted probability of patient having COVID-19 and the heatmap of critical regions on the X-ray that contributed to the diagnosis.</li>
+                            </ul>
                             </div>
 
                         </div>
