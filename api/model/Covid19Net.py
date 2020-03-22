@@ -73,7 +73,7 @@ def load_image(image):
 
 def load_model():
     model = COVID19Classifier(densenet121)
-    ckpt_dict = torch.load('/model.pth.tar')
-    model.load_state_dict(ckpt_dict['state_dict'])
     model.model.classifier = nn.Linear(model.num_features, 1)
+    ckpt_dict = torch.load('model/model.pth.tar', map_location=torch.device('cpu'))
+    model.load_state_dict(ckpt_dict['state_dict'])
     return model

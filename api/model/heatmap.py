@@ -22,10 +22,10 @@ class HeatmapGenerator():
     def __init__(self, pathModel, nnClassCount, transCrop):
 
         # ---- Initialize the network
-        model = densenet121(nnClassCount).cuda()
+        model = densenet121(nnClassCount)
 
         if use_gpu:
-            model = DataParallel(model).cuda()
+            model = DataParallel(model)
         else:
             model = DataParallel(model)
 
@@ -57,7 +57,7 @@ class HeatmapGenerator():
             imageData = self.transformSequence(imageData)
             imageData = imageData.unsqueeze_(0)
             if use_gpu:
-                imageData = imageData.cuda()
+                imageData = imageData
             l = self.model(imageData)
             output = self.model.module.densenet121.features(imageData)
             label = class_names[torch.max(l, 1)[1]]
