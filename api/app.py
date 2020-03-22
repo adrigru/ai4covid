@@ -2,14 +2,15 @@ import io
 from json import dumps
 
 import cv2
+import torch
 import numpy as np
 from flask import Flask, Response, send_file, request
-from model import Covid19Net
-from model import heatmap
+from api.model import Covid19Net
+from api.model import heatmap
+from PIL import Image
 
 app = Flask(__name__)
-model = Covid19Net.load_model()
-#h_map = heatmap.HeatmapGenerator(None, None, None)
+model = Covid19Net.load_model('res/model.pth.tar', device=torch.device('cpu'))
 
 
 @app.route('/')
@@ -36,22 +37,17 @@ def classify():
     if request.content_length > 4194304:
         return Response(dumps({'error': 'Exceeded maximal content size'}), status=413,
                         mimetype='application/json')
-    try:
-        _bytes = request.get_data()
-        image = encode_image(_bytes)
-        data_loader = model.load_image(image)
-        y_pred = Covid19Net.predict(data_loader, model)
-        # TODO here get heatmap
-        # img_out =  h_map.generate()
-        # _, img_encoded = cv2.imencode('.jpg', image)
-    except:
-        pass
-        # Return json with b64 or bytes encoded image and probabilities when possible
-        # Otherwise we need individual endpoint for heatmaps and prediction
-        # return send_file(io.BytesIO(img_encoded), as_attachment=True, attachment_filename='image_detected.jpg',
-        #                  mimetype='image/jpg')
+    # _bytes = request.get_data()
+    # image = encode_image(_bytes)
+    # TODO dummy image
+    image = Image.open('res/image.jpeg').convert('RGB')
+    prediction = Covid19Net.predict(model, image)
 
-    return Response(dumps({'prediction': 99.7}), status=200, mimetype='application/json')
+    # TODO here get heatmap
+    # img_out =  h_map.generate()
+    # _, img_encoded = cv2.imencode('.jpg', image)
+
+    return Response(dumps({'prediction': prediction}), status=200, mimetype='application/json')
 
 
 if __name__ == '__main__':
