@@ -53,7 +53,7 @@ def generate_heatmap_image(image):
     # generate heatmap using the network
     heatmap = Covid19Net.generate_heatmap(model, image).numpy()
     # normalize heatmap
-    heatmap = heatmap / np.max(heatmap)
+    heatmap = 1. - heatmap / np.max(heatmap)
     # resize to match input image dimensions
     heatmap = cv2.resize(heatmap, (224, 224))
     # apply color map to the heatmap
@@ -61,7 +61,7 @@ def generate_heatmap_image(image):
     # apply heatmap to the input image
     image_array = np.array(image)
     heatmap_image = cv2.addWeighted(image_array, 1, heatmap, 0.35, 0)
-    heatmap_image = cv2.cvtColor(heatmap_image, cv2.COLOR_BGR2RGB)
+    heatmap_image = cv2.cvtColor(heatmap_image, cv2.COLOR_RGB2BGR)
     return heatmap_image
 
 
