@@ -1,11 +1,9 @@
-import seaborn as sns
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torchvision.transforms as transforms
 from torchvision.models import densenet121
 
-sns.set()
 
 _transform = transforms.Compose([
     transforms.Resize(224),
@@ -33,9 +31,11 @@ class COVID19Classifier(nn.Module):
 
 
 def predict(model, image):
+    model.eval()
     image = _transform(image)
     image = torch.unsqueeze(image, dim=0)
-    prediction = model(image).item()
+    with torch.no_grad():
+        prediction = model(image).item()
     return prediction
 
 
@@ -45,3 +45,16 @@ def load_model(ckpt_path, device=None):
     ckpt_dict = torch.load(ckpt_path, map_location=device)
     model.load_state_dict(ckpt_dict['state_dict'])
     return model
+
+
+def generate_heatmap(model, image):
+    model.eval()
+    image = _transform(image)
+    image = torch.unsqueeze(image, dim=0)
+    weights = list(model.model.features.parameters())[-2]
+    with torch.no_grad():
+        features = model.model.features(image)
+        heatmap = torch.zeros(features.shape[-2:])
+        for i, w in enumerate(weights):
+            heatmap += w * features[0, i, :, :]
+    return heatmap

@@ -1,16 +1,23 @@
-import io
+import base64
+from io import BytesIO
 from json import dumps
 
 import cv2
-import torch
 import numpy as np
-from flask import Flask, Response, send_file, request
-from api.model import Covid19Net
-from api.model import heatmap
+import torch
+import torchvision.transforms as transforms
 from PIL import Image
+from flask import Flask, Response, request
+
+from api.model import Covid19Net
 
 app = Flask(__name__)
 model = Covid19Net.load_model('res/model.pth.tar', device=torch.device('cpu'))
+
+_transform = transforms.Compose([
+    transforms.Resize(224),
+    transforms.CenterCrop(224)
+])
 
 
 @app.route('/')
@@ -28,26 +35,58 @@ def encode_image(_bytes):
     return cv2.imdecode(ndarray, cv2.IMREAD_COLOR)
 
 
+def base64_to_image(base64_string):
+    """
+    :param base64_string: base64 string
+    :return: PIL Image
+    """
+    return Image.open(BytesIO(base64.b64decode(base64_string)))
+
+
+def array_to_base64(array):
+    """
+    :param array: Numpy array
+    :return: base64 string
+    """
+    return base64.b64decode(array)
+
+
+def generate_heatmap_image(image):
+    """
+    :param image: PIL Image
+    :return: Numpy array (height, width, channels)
+    """
+    # resize and center crop the input image
+    image = _transform(image)
+    # generate heatmap using the network
+    heatmap = Covid19Net.generate_heatmap(model, image).numpy()
+    # normalize heatmap
+    heatmap = heatmap / np.max(heatmap)
+    # resize to match input image dimensions
+    heatmap = cv2.resize(heatmap, (224, 224))
+    # apply color map to the heatmap
+    heatmap = cv2.applyColorMap(np.uint8(255 * heatmap), cv2.COLORMAP_JET)
+    # apply heatmap to the input image
+    image_array = np.array(image)
+    heatmap_image = cv2.addWeighted(image_array, 1, heatmap, 0.35, 0)
+    heatmap_image = cv2.cvtColor(heatmap_image, cv2.COLOR_BGR2RGB)
+    return heatmap_image
+
+
 @app.route('/api/v1/classify/', methods=['POST'])
 def classify():
     """
     Classifies objects detected in the provided image.
     :return: Class score.
     """
-    if request.content_length > 4194304:
-        return Response(dumps({'error': 'Exceeded maximal content size'}), status=413,
-                        mimetype='application/json')
-    # _bytes = request.get_data()
-    # image = encode_image(_bytes)
-    # TODO dummy image
-    image = Image.open('res/image.jpeg').convert('RGB')
+    image_base64 = request.get_data()
+    image = base64_to_image(image_base64)
     prediction = Covid19Net.predict(model, image)
-
-    # TODO here get heatmap
-    # img_out =  h_map.generate()
-    # _, img_encoded = cv2.imencode('.jpg', image)
-
-    return Response(dumps({'prediction': prediction}), status=200, mimetype='application/json')
+    heatmap_image = generate_heatmap_image(image)
+    heatmap_image_base64 = array_to_base64(heatmap_image)
+    response_json = dumps({'prediction': prediction,
+                           'heatmap': heatmap_image_base64})
+    return Response(response_json, status=200, mimetype='application/json')
 
 
 if __name__ == '__main__':
