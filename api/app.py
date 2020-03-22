@@ -8,21 +8,19 @@ import torch
 import torchvision.transforms as transforms
 from PIL import Image
 from flask import Flask, Response, request
+from flask_cors import CORS, cross_origin
 
 from api.model import Covid19Net
 
 app = Flask(__name__)
+CORS(app)
+app.config['CORS_HEADERS'] = 'Content-Type'
 model = Covid19Net.load_model('res/model.pth.tar', device=torch.device('cpu'))
 
 _transform = transforms.Compose([
     transforms.Resize(224),
     transforms.CenterCrop(224)
 ])
-
-
-@app.route('/')
-def hello_world():
-    return 'Hello, World!'
 
 
 def encode_image(_bytes):
@@ -32,8 +30,9 @@ def encode_image(_bytes):
     :return: 3D ndarray containing the image
     """
     ndarray = np.fromstring(_bytes, np.uint8)
-    return cv2.imdecode(ndarray, cv2.IMREAD_COLOR)
-
+    ndarray = cv2.imdecode(ndarray, cv2.IMREAD_COLOR)
+    image = Image.fromarray(ndarray)
+    return image
 
 def base64_to_image(base64_string):
     """
@@ -48,7 +47,7 @@ def array_to_base64(array):
     :param array: Numpy array
     :return: base64 string
     """
-    return base64.b64decode(array)
+    return base64.b64encode(array)
 
 
 def generate_heatmap_image(image):
@@ -74,16 +73,18 @@ def generate_heatmap_image(image):
 
 
 @app.route('/api/v1/classify/', methods=['POST'])
+@cross_origin()
 def classify():
     """
     Classifies objects detected in the provided image.
     :return: Class score.
     """
-    image_base64 = request.get_data()
-    image = base64_to_image(image_base64)
+    bytes = request.files['file'].stream.read()
+    image = encode_image(bytes)
     prediction = Covid19Net.predict(model, image)
     heatmap_image = generate_heatmap_image(image)
-    heatmap_image_base64 = array_to_base64(heatmap_image)
+    heatmap_image_base64 = array_to_base64(heatmap_image).decode('utf-8')
+    print(heatmap_image_base64)
     response_json = dumps({'prediction': prediction,
                            'heatmap': heatmap_image_base64})
     return Response(response_json, status=200, mimetype='application/json')
@@ -92,4 +93,4 @@ def classify():
 if __name__ == '__main__':
     # Set debug=False and threaded=False otherwise the model throws exceptions
     # Set debug=True for developing the API without using the model
-    app.run(debug=True, threaded=False, host='localhost', port='8080')
+    app.run(debug=True, threaded=False, host='localhost', port='8000')
