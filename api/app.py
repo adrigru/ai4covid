@@ -1,5 +1,4 @@
 import base64
-from io import BytesIO
 from json import dumps
 
 import cv2
@@ -23,31 +22,25 @@ _transform = transforms.Compose([
 ])
 
 
-def encode_image(_bytes):
+def decode_image(_bytes):
     """
-    Converts the image into a numpy array for further processing by the model.
-    :param _bytes:
-    :return: 3D ndarray containing the image
+    Converts byte array into image for further processing by the model.
+    :param _bytes: byte array
+    :return: PIL Image
     """
     ndarray = np.fromstring(_bytes, np.uint8)
     ndarray = cv2.imdecode(ndarray, cv2.IMREAD_COLOR)
     image = Image.fromarray(ndarray)
     return image
 
-def base64_to_image(base64_string):
-    """
-    :param base64_string: base64 string
-    :return: PIL Image
-    """
-    return Image.open(BytesIO(base64.b64decode(base64_string)))
 
-
-def array_to_base64(array):
+def image_array_to_base64(image_array):
     """
-    :param array: Numpy array
+    :param image_array: Numpy array (height, width, channels)
     :return: base64 string
     """
-    return base64.b64encode(array)
+    _, encoded_image = cv2.imencode('.jpg', image_array)
+    return base64.b64encode(encoded_image).decode('utf-8')
 
 
 def generate_heatmap_image(image):
@@ -79,12 +72,11 @@ def classify():
     Classifies objects detected in the provided image.
     :return: Class score.
     """
-    bytes = request.files['file'].stream.read()
-    image = encode_image(bytes)
+    bytes_ = request.files['file'].stream.read()
+    image = decode_image(bytes_)
     prediction = Covid19Net.predict(model, image)
     heatmap_image = generate_heatmap_image(image)
-    heatmap_image_base64 = array_to_base64(heatmap_image).decode('utf-8')
-    print(heatmap_image_base64)
+    heatmap_image_base64 = image_array_to_base64(heatmap_image)
     response_json = dumps({'prediction': prediction,
                            'heatmap': heatmap_image_base64})
     return Response(response_json, status=200, mimetype='application/json')
