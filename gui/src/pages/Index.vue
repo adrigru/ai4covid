@@ -35,7 +35,6 @@
 </template>
 <script>
     import {Parallax, Card} from '@/components';
-    import Typography from './components/Typography';
     import Button from '../components/Button';
     import axios from 'axios';
 
@@ -45,7 +44,6 @@
         components: {
             [Button.name]: Button,
             Parallax,
-            Typography,
             Card,
         },
         methods: {

@@ -3,10 +3,6 @@
     <div class="container">
       <div class="navbar-translate">
         <slot v-bind="slotData"></slot>
-        <navbar-toggle-button
-          :toggled="showMenu"
-          @click.native.stop="toggle"
-        ></navbar-toggle-button>
       </div>
       <div
         class="navbar-collapse collapse"
@@ -31,8 +27,6 @@
   </nav>
 </template>
 <script>
-import { CollapseTransition } from 'vue2-transitions';
-import NavbarToggleButton from './NavbarToggleButton';
 let resizeTimeout;
 function resizeThrottler(actualResizeHandler) {
   // ignore resize events as long as an actualResizeHandler execution is in the queue
@@ -95,10 +89,6 @@ export default {
     return {
       closeNavbar: this.close
     };
-  },
-  components: {
-    CollapseTransition,
-    NavbarToggleButton
   },
   data() {
     return {

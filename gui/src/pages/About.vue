@@ -46,7 +46,6 @@
 </template>
 <script>
     import {Parallax, Card} from '@/components';
-    import Typography from './components/Typography';
     import Button from '../components/Button';
     import scrollTo from '../plugins/scrollMixin';
 
@@ -57,7 +56,6 @@
         components: {
             [Button.name]: Button,
             Parallax,
-            Typography,
             Card,
         },
         methods: {
